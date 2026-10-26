@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-
     public function create()
     {
         $categories = Category::orderBy('name')->get();
@@ -23,6 +22,21 @@ class ProductController extends Controller
         Product::create($request->validated());
 
         return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan.');
+    }
+
+    public function show(Product $product)
+    {
+        $product->load(['transactionDetails.transaction']);
+
+        $totalTerjual = $product->transactionDetails->sum('qty');
+
+        $riwayat = $product->transactionDetails()
+            ->with('transaction')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        return view('master-data.product.show', compact('product', 'totalTerjual', 'riwayat'));
     }
 
     public function edit(Product $product)
